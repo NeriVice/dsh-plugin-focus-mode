@@ -1,8 +1,8 @@
 {
   "name": "dsh-plugin-focus-mode",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "Distraction-free chat focus mode for the DSH Web GUI: AltGr+, hides the app chrome, +/- resizes the text, Esc restores it.",
+  "description": "Distraction-free chat focus mode for the DSH Web GUI: Shift+Enter hides the app chrome, +/- resizes the text, Esc restores it.",
   "type": "module",
   "main": "index.js",
   "exports": {

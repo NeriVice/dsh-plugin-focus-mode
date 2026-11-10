@@ -1,10 +1,10 @@
 /**
  * Focus mode, browser half.
  *
- * AltGr+, toggles a reading view that keeps only the conversation text:
+ * Shift+Enter toggles a reading view that keeps only the conversation text:
  * the sidebar, right panel, header, composer, message actions and tool-process
  * rows are hidden, and the conversation column expands to the page width.
- * Escape (or AltGr+, again) restores the normal shell.
+ * Escape (or Shift+Enter again) restores the normal shell.
  *
  * This file is a hand-written client bundle. `dsh-client-modules` serves it as
  * the package's `./client` export, and the loader expects this exact
@@ -422,18 +422,14 @@ function isResetKey(event) {
   return event.key === "0" || event.code === "Numpad0";
 }
 
-/**
- * AltGr often arrives as Ctrl+Alt in browsers that do not report AltGraph, and
- * as a dedicated AltGraph modifier where they do. Accept either form.
- */
+/** AltGr is reported as a dedicated AltGraph modifier or as Ctrl+Alt. */
 function isAltGraph(event) {
   if (typeof event.getModifierState === "function" && event.getModifierState("AltGraph")) return true;
   return event.ctrlKey && event.altKey;
 }
 
 function onKeyDown(event) {
-  const altGraph = isAltGraph(event);
-  if (event.isComposing || (event.keyCode === 229 && !altGraph) || event.repeat) return;
+  if (event.isComposing || event.keyCode === 229 || event.repeat) return;
 
   if ((event.key === "Escape" || event.key === "Esc") && active) {
     if (modalOpen()) return;
@@ -444,8 +440,15 @@ function onKeyDown(event) {
     return;
   }
 
-  /* Physical comma key: AltGr+, (or Ctrl+Alt+, where AltGr is reported that way). */
-  if (event.code === "Comma" && altGraph && !event.shiftKey && !event.metaKey) {
+  /* Global reading-view toggle. Shift+Enter no longer inserts a newline. */
+  if (
+    event.key === "Enter" &&
+    event.shiftKey &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    !event.metaKey &&
+    !isAltGraph(event)
+  ) {
     if (modalOpen()) return;
     if (setFocus(!active)) {
       event.preventDefault();

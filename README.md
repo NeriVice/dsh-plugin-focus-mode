@@ -2,13 +2,11 @@
 
 Modo de lectura sin distracciones para el chat de **DeepSeek Harness Web**.
 
-- **AltGr + ,** activa o desactiva el modo.
+- **Shift + Enter** activa o desactiva el modo.
 - **Esc** también lo desactiva.
 - Dentro del modo focus, **+** (o **=**) agranda la fuente y **-** la reduce, en
   pasos del 10 %.
 - **0** vuelve al tamaño normal (100 %).
-- En teclados o navegadores que no exponen AltGr, la misma combinación suele
-  llegar como **Ctrl + Alt + ,** y el plugin también la acepta.
 
 Al activarlo se ocultan la barra lateral, el panel derecho, la cabecera, el
 compositor, la barra de scroll, los botones de acción de los mensajes, las
@@ -17,8 +15,10 @@ conversación en una columna centrada de hasta 1400 px: en pantallas estrechas
 conserva 32 px de margen a cada lado y en pantallas muy anchas añade el margen
 necesario para no estirar las líneas.
 
-`Shift+Enter` sigue funcionando como salto de línea en el compositor: este
-plugin no lo toca.
+**Importante:** `Shift+Enter` queda reservado globalmente para este modo, así
+que en el compositor ya no inserta un salto de línea. Es el mismo comportamiento
+que tenía la primera versión del plugin. Si más adelante querés conservar el
+salto de línea, se puede condicionar el atajo a que el compositor esté vacío.
 
 ## Tamaño de fuente
 
@@ -76,16 +76,16 @@ Para desinstalarlo, elimina ese bloque del parche y recarga.
   través de `exports["./client"]` y la declaración `dsh.client` del
   `package.json`.
 - La combinación se captura en fase de captura sobre `window`, antes que el
-  editor y antes de que AltGr inserte su carácter. Se acepta tanto
-  `getModifierState("AltGraph")` como el par `Ctrl+Alt` que usan algunos
-  navegadores para representar AltGr.
+  editor y antes de que el compositor inserte nada. Por eso `Shift+Enter` no
+  produce un salto de línea mientras el plugin está activo; es intencionado:
+  el atajo es global.
 - El plugin localiza el frame del layout, la columna central y el cuerpo de la
   conversación por atributos `data-*` estables, les pone marcas propias y
   aplica el CSS. Un `MutationObserver` vuelve a marcar los nodos si React los
   reemplaza.
 - Los diálogos y avisos de la capa `data-shell-overlay` siguen visibles y
   operativos; si hay un modal o un menú abierto, el plugin no intercepta
-  AltGr+, Escape ni +/−/0 para no robarle el comportamiento.
+  Shift+Enter, Escape ni +/−/0 para no robarle el comportamiento.
 - Al entrar, el foco pasa al transcript para que PageUp/PageDown y las flechas
   hagan scroll. Al salir se devuelve el foco al compositor y se conserva el
   borrador.
@@ -93,8 +93,8 @@ Para desinstalarlo, elimina ese bloque del parche y recarga.
   reescribe escalados en `<body>`; al salir restaura los valores originales.
 - El modo no se guarda: recargar la página vuelve al layout normal. El tamaño
   de fuente sí se conserva para la próxima vez que entres.
-- En una sesión vacía (la pantalla de bienvenida) AltGr+, no hace nada: no tiene
-  sentido ocultar todo si todavía no hay conversación que leer.
+- En una sesión vacía (la pantalla de bienvenida) Shift+Enter no hace nada: no
+  tiene sentido ocultar todo si todavía no hay conversación que leer.
 
 ## Personalización
 
