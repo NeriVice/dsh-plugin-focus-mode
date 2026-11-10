@@ -1,0 +1,46 @@
+{
+  "name": "dsh-plugin-focus-mode",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Distraction-free chat focus mode for the DSH Web GUI: AltGr+, hides the app chrome, Esc restores it.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NeriVice/dsh-plugin-focus-mode.git"
+  },
+  "homepage": "https://github.com/NeriVice/dsh-plugin-focus-mode#readme",
+  "bugs": {
+    "url": "https://github.com/NeriVice/dsh-plugin-focus-mode/issues"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "focus-mode",
+    "fullscreen",
+    "web"
+  ],
+  "author": "NeriVice",
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [],
+      "immediately": true
+    }
+  },
+  "engines": {
+    "node": ">=24.9.0"
+  },
+  "license": "MIT"
+}
