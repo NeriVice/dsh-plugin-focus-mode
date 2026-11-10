@@ -82,20 +82,16 @@ html[${ROOT_ATTR}] [data-conversation-tabs] {
   display: none !important;
 }
 
-/* Tool calls, reasoning process rows, timings, usage details and message
-   action buttons are application chrome rather than conversation text. */
-html[${ROOT_ATTR}] [data-chat-flow-kind="turn-process"],
+/* Timings, usage details and message action buttons are chrome. The
+   assistant's process groups, reasoning rows and live "thinking" indicator
+   stay visible so the reading view follows the work as it happens. */
 html[${ROOT_ATTR}] [data-chat-flow-kind="turn-tail"],
 html[${ROOT_ATTR}] [data-chat-flow-kind="turn-trigger"],
-html[${ROOT_ATTR}] [data-turn-process],
-html[${ROOT_ATTR}] [data-step-process],
 html[${ROOT_ATTR}] [data-chat-turn-spacer],
 html[${ROOT_ATTR}] [data-assistant-timing],
 html[${ROOT_ATTR}] [data-turn-usage-details],
 html[${ROOT_ATTR}] [data-actions-reveal],
 html[${ROOT_ATTR}] [data-clock],
-html[${ROOT_ATTR}] [data-chat-running],
-html[${ROOT_ATTR}] [data-shimmer="true"],
 html[${ROOT_ATTR}] [class*="toBottomSlot"],
 html[${ROOT_ATTR}] [class*="_older"],
 html[${ROOT_ATTR}] [${CHAT_ATTR}] nav[class*="_frame"] {

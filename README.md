@@ -9,16 +9,37 @@ Modo de lectura sin distracciones para el chat de **DeepSeek Harness Web**.
 - **0** vuelve al tamaño normal (100 %).
 
 Al activarlo se ocultan la barra lateral, el panel derecho, la cabecera, el
-compositor, la barra de scroll, los botones de acción de los mensajes, las
-llamadas a herramientas y el proceso de razonamiento. Queda el texto de la
-conversación en una columna centrada de hasta 1400 px: en pantallas estrechas
-conserva 32 px de margen a cada lado y en pantallas muy anchas añade el margen
-necesario para no estirar las líneas.
+compositor, la barra de scroll, los timestamps y los botones de acción de los
+mensajes. **El proceso del asistente sí se ve**: los resúmenes de razonamiento,
+las llamadas a herramientas y el estado en vivo («Razonando a fondo…») siguen
+en pantalla mientras el turno avanza. Queda el texto de la conversación en una
+columna centrada de hasta 1400 px: en pantallas estrechas conserva 32 px de
+margen a cada lado y en pantallas muy anchas añade el margen necesario para no
+estirar las líneas.
 
 **Importante:** `Shift+Enter` queda reservado globalmente para este modo, así
 que en el compositor ya no inserta un salto de línea. Es el mismo comportamiento
 que tenía la primera versión del plugin. Si más adelante querés conservar el
 salto de línea, se puede condicionar el atajo a que el compositor esté vacío.
+
+## Procesos y razonamiento
+
+El modo focus no oculta el trabajo del asistente:
+
+- se ven los grupos de proceso, los resúmenes de razonamiento y las llamadas a
+  herramientas;
+- se ve el indicador en vivo («Razonando a fondo…») mientras el turno avanza;
+- si estabas al final del transcript, el scroll sigue el final para que veas el
+  proceso «hasta aquí», no solo la respuesta ya escrita.
+
+Los turnos anteriores mantienen el comportamiento normal de DSH: sus grupos
+aparecen como «Completado en…» y se pueden expandir. El turno en curso se ve
+expandido mientras corre. Las filas de razonamiento y herramientas conservan su
+comportamiento de disclosure: muestran el resumen en una línea y se pueden
+expandir o colapsar con clic, igual que en la interfaz normal.
+
+Se muestra lo que DSH publica en el transcript; el plugin no fuerza contenido
+que la interfaz no expone.
 
 ## Tamaño de fuente
 
@@ -83,6 +104,8 @@ Para desinstalarlo, elimina ese bloque del parche y recarga.
   conversación por atributos `data-*` estables, les pone marcas propias y
   aplica el CSS. Un `MutationObserver` vuelve a marcar los nodos si React los
   reemplaza.
+- El CSS deja intactos los grupos de proceso, el razonamiento y el indicador en
+  vivo; solo oculta timestamps, botones de acción y metadatos de uso.
 - Los diálogos y avisos de la capa `data-shell-overlay` siguen visibles y
   operativos; si hay un modal o un menú abierto, el plugin no intercepta
   Shift+Enter, Escape ni +/−/0 para no robarle el comportamiento.
