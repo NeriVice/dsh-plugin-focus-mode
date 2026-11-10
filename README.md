@@ -4,6 +4,9 @@ Modo de lectura sin distracciones para el chat de **DeepSeek Harness Web**.
 
 - **AltGr + ,** activa o desactiva el modo.
 - **Esc** también lo desactiva.
+- Dentro del modo focus, **+** (o **=**) agranda la fuente y **-** la reduce, en
+  pasos del 10 %.
+- **0** vuelve al tamaño normal (100 %).
 - En teclados o navegadores que no exponen AltGr, la misma combinación suele
   llegar como **Ctrl + Alt + ,** y el plugin también la acepta.
 
@@ -16,6 +19,30 @@ necesario para no estirar las líneas.
 
 `Shift+Enter` sigue funcionando como salto de línea en el compositor: este
 plugin no lo toca.
+
+## Tamaño de fuente
+
+Dentro del modo focus:
+
+| Tecla | Efecto |
+|---|---|
+| `+` o `=` | +10 % |
+| `-` | −10 % |
+| `0` | volver a 100 % |
+
+El rango va del **80 % al 200 %**. El tamaño elegido se guarda en
+`localStorage` (`dsh.focusMode.fontScale.v1`) y se recupera al volver a entrar,
+incluso después de recargar la página. Al salir del modo focus, la interfaz
+recupera exactamente el tamaño de fuente configurado en DSH.
+
+La escala se aplica sobre las variables de tipografía del tema
+(`--dsh-content-font-size`, `--dsh-code-font-size` y
+`--dsh-terminal-font-size`), así que también crecen los títulos, el código y
+las líneas de texto mantienen una altura proporcional. No cambia el ancho de la
+columna: el texto reflowea dentro de los mismos 1400 px.
+
+Las teclas `+`, `-` y `0` solo actúan en modo focus, y nunca mientras haya un
+campo editable, un diálogo o un menú abierto.
 
 ## Instalación
 
@@ -58,11 +85,14 @@ Para desinstalarlo, elimina ese bloque del parche y recarga.
   reemplaza.
 - Los diálogos y avisos de la capa `data-shell-overlay` siguen visibles y
   operativos; si hay un modal o un menú abierto, el plugin no intercepta
-  AltGr+, ni Escape para no robarle el comportamiento.
+  AltGr+, Escape ni +/−/0 para no robarle el comportamiento.
 - Al entrar, el foco pasa al transcript para que PageUp/PageDown y las flechas
   hagan scroll. Al salir se devuelve el foco al compositor y se conserva el
   borrador.
-- El modo no se guarda: recargar la página vuelve al layout normal.
+- El ajuste de fuente lee una sola vez los tamaños base del tema y los
+  reescribe escalados en `<body>`; al salir restaura los valores originales.
+- El modo no se guarda: recargar la página vuelve al layout normal. El tamaño
+  de fuente sí se conserva para la próxima vez que entres.
 - En una sesión vacía (la pantalla de bienvenida) AltGr+, no hace nada: no tiene
   sentido ocultar todo si todavía no hay conversación que leer.
 

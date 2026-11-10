@@ -21,6 +21,18 @@ const CONVERSATION_ATTR = "data-dsh-focus-conversation";
 /** Default readable width, still capped for very wide monitors. */
 const CONTENT_WIDTH = "min(calc(100vw - 64px), 1400px)";
 
+/** Persisted reading size, in percent of the app's own font-size settings. */
+const FONT_SCALE_KEY = "dsh.focusMode.fontScale.v1";
+const FONT_SCALE_DEFAULT = 100;
+const FONT_SCALE_MIN = 80;
+const FONT_SCALE_MAX = 200;
+const FONT_SCALE_STEP = 10;
+const FONT_VARIABLES = [
+  ["--dsh-content-font-size", 14],
+  ["--dsh-code-font-size", 11],
+  ["--dsh-terminal-font-size", 13]
+];
+
 const STYLE = `
 html[${ROOT_ATTR}] [${FRAME_ATTR}] {
   grid-template-columns: 0 minmax(0, 1fr) 0 !important;
@@ -127,6 +139,9 @@ let restoreTarget = null;
 let focusedScroller = null;
 let scrollerTabindexAdded = false;
 let rafId = 0;
+let fontScale = readStoredFontScale();
+let savedFonts = null;
+let fontBases = null;
 
 /** Return a visible Conversation body, or null when there is nothing to read. */
 function findLayout() {
@@ -223,6 +238,95 @@ function releaseScroller() {
   scrollerTabindexAdded = false;
 }
 
+/** Keep the reading size on a 10% grid, within the supported range. */
+function normalizeFontScale(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return FONT_SCALE_DEFAULT;
+  const rounded = Math.round(numeric / FONT_SCALE_STEP) * FONT_SCALE_STEP;
+  return Math.min(FONT_SCALE_MAX, Math.max(FONT_SCALE_MIN, rounded));
+}
+
+function readStoredFontScale() {
+  try {
+    const raw = globalThis.localStorage.getItem(FONT_SCALE_KEY);
+    if (raw === null) return FONT_SCALE_DEFAULT;
+    return normalizeFontScale(Number.parseInt(raw, 10));
+  } catch {
+    return FONT_SCALE_DEFAULT;
+  }
+}
+
+function saveFontScale() {
+  try {
+    globalThis.localStorage.setItem(FONT_SCALE_KEY, String(fontScale));
+  } catch {
+    /* Private mode or a blocked storage area: the in-page value still works. */
+  }
+}
+
+/** Read the app's current font settings once, before overriding them. */
+function captureFontBases() {
+  if (!document.body) return;
+  const style = getComputedStyle(document.body);
+  fontBases = FONT_VARIABLES.map(([name, fallback]) => {
+    const value = Number.parseFloat(style.getPropertyValue(name));
+    return { name, base: Number.isFinite(value) && value > 0 ? value : fallback };
+  });
+}
+
+/**
+ * The theme derives every secondary size and line height from these three
+ * variables on <body>, so scaling them reflows headings, code and prose
+ * together instead of stretching only one of them.
+ */
+function applyFontScale() {
+  if (!fontBases || !document.body) return;
+  const factor = fontScale / 100;
+  for (const { name, base } of fontBases) {
+    document.body.style.setProperty(name, `${(base * factor).toFixed(2)}px`);
+  }
+}
+
+function beginFontScale() {
+  if (!document.body) return;
+  endFontScale();
+  savedFonts = FONT_VARIABLES.map(([name]) => ({
+    name,
+    value: document.body.style.getPropertyValue(name),
+    priority: document.body.style.getPropertyPriority(name)
+  }));
+  captureFontBases();
+  applyFontScale();
+}
+
+function endFontScale() {
+  if (savedFonts && document.body) {
+    for (const { name, value, priority } of savedFonts) {
+      if (value === "") document.body.style.removeProperty(name);
+      else document.body.style.setProperty(name, value, priority);
+    }
+  }
+  savedFonts = null;
+  fontBases = null;
+}
+
+function changeFontScale(delta) {
+  const next = normalizeFontScale(fontScale + delta);
+  if (next === fontScale) return false;
+  fontScale = next;
+  applyFontScale();
+  saveFontScale();
+  return true;
+}
+
+function resetFontScale() {
+  if (fontScale === FONT_SCALE_DEFAULT) return false;
+  fontScale = FONT_SCALE_DEFAULT;
+  applyFontScale();
+  saveFontScale();
+  return true;
+}
+
 /**
  * Enter or leave the reading view.
  * @param {boolean} next wanted state
@@ -239,12 +343,14 @@ function setFocus(next) {
     currentLayout = layout;
     active = true;
     document.documentElement.setAttribute(ROOT_ATTR, "");
+    beginFontScale();
     rememberAndBlur();
     focusScroller(layout.chat);
   } else {
     document.documentElement.removeAttribute(ROOT_ATTR);
     active = false;
     currentLayout = null;
+    endFontScale();
     releaseScroller();
     clearMarkers();
     restoreFocus();
@@ -280,7 +386,40 @@ function scheduleReapply() {
 
 /** A modal keeps its own Escape/accelerator behavior; do not steal input from it. */
 function modalOpen() {
-  return document.querySelector('[role="dialog"][aria-modal="true"], [role="menu"], dialog[open]') !== null;
+  return document.querySelector('[role="dialog"], [role="menu"], dialog[open]') !== null;
+}
+
+/** Never turn a typing key into a reading command inside a form control. */
+function isEditableTarget(event) {
+  const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+  let target = null;
+  for (const node of path) {
+    if (node && typeof node.closest === "function") {
+      target = node;
+      break;
+    }
+  }
+  if (target === null) target = document.activeElement;
+  return !!(target && typeof target.closest === "function" &&
+    target.closest('input, textarea, select, [contenteditable="true"], [contenteditable=""]'));
+}
+
+/** + / = / numpad plus, but never Ctrl+Plus or AltGr+Plus. */
+function isPlusKey(event) {
+  if (event.ctrlKey || event.altKey || event.metaKey || isAltGraph(event)) return false;
+  return event.key === "+" || event.key === "=" || event.code === "NumpadAdd";
+}
+
+/** - / numpad minus, without modifiers. */
+function isMinusKey(event) {
+  if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey || isAltGraph(event)) return false;
+  return event.key === "-" || event.code === "NumpadSubtract";
+}
+
+/** 0 / numpad zero restores the 100% reading size. */
+function isResetKey(event) {
+  if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey || isAltGraph(event)) return false;
+  return event.key === "0" || event.code === "Numpad0";
 }
 
 /**
@@ -312,6 +451,29 @@ function onKeyDown(event) {
       event.preventDefault();
       event.stopImmediatePropagation();
     }
+    return;
+  }
+
+  if (!active || modalOpen() || isEditableTarget(event)) return;
+
+  if (isPlusKey(event)) {
+    changeFontScale(FONT_SCALE_STEP);
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return;
+  }
+
+  if (isMinusKey(event)) {
+    changeFontScale(-FONT_SCALE_STEP);
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return;
+  }
+
+  if (isResetKey(event)) {
+    resetFontScale();
+    event.preventDefault();
+    event.stopImmediatePropagation();
   }
 }
 
